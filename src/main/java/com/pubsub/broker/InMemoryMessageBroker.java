@@ -51,7 +51,11 @@ public class InMemoryMessageBroker implements MessageBroker {
         if (offset == null) {
             return null;
         }
-        return topics.get(topic).get(offset);
+        if (topics.get(topic).size() > offset) {
+            return topics.get(topic).get(offset);
+        } else {
+            return null;
+        }
     }
 
     @Override
