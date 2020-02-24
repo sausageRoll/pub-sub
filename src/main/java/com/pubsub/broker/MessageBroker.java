@@ -17,5 +17,7 @@ public interface MessageBroker {
 
     Message<String> poll(String topic, String subscriberKey, int timeout, TimeUnit unit);
 
+    boolean commitOffset(String topic, String subscriberKey);
+
     int size();
 }
