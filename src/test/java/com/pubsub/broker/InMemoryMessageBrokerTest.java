@@ -59,6 +59,16 @@ class InMemoryMessageBrokerTest {
     }
 
     @Test
+    public void testNonExistingTopic() {
+        messageBroker.publishMessage("topicTest", new Message<>("message"));
+        messageBroker.publishMessage("topicTest", new Message<>("message1"));
+        String key = messageBroker.subscribe("topicTest");
+        assertEquals(messageBroker.poll("topicTest", key).getValue(), "message");
+        assertEquals(messageBroker.poll("topicTest", key).getValue(), "message");
+        assertEquals(messageBroker.poll("topicTest", key).getValue(), "message");
+    }
+
+    @Test
     public void testPollTimeout() {
         assertTrue(messageBroker.createTopic("topicTest"));
         messageBroker.publishMessage("topicTest", new Message<>("message"));
@@ -76,9 +86,9 @@ class InMemoryMessageBrokerTest {
         assertNull(messageBroker.poll("topicTest", key));
 
         String key2 = messageBroker.subscribe("topicTest");
-        assertEquals(messageBroker.poll("topicTest", key).getValue(), "message");
+        assertEquals(messageBroker.poll("topicTest", key2).getValue(), "message");
         messageBroker.commitOffset("topicTest", key2);
-        assertEquals(messageBroker.poll("topicTest", key).getValue(), "message1");
+        assertEquals(messageBroker.poll("topicTest", key2).getValue(), "message1");
 
     }
 

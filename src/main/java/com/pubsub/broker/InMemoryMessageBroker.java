@@ -34,9 +34,15 @@ public class InMemoryMessageBroker implements MessageBroker {
     @Override
     public void publishMessage(String topic, Message<String> message) {
         System.out.println(String.format("message %s came to topic %s", message.getValue(), topic));
-        topics.computeIfPresent(topic, (t, q) -> {
-            q.add(message);
-            return q;
+        topics.compute(topic, (t, q) -> {
+            if (q != null) {
+                q.add(message);
+                return q;
+            } else {
+                CopyOnWriteArrayList<Message<String>> res = new CopyOnWriteArrayList<>();
+                res.add(message);
+                return res;
+            }
         });
     }
 
