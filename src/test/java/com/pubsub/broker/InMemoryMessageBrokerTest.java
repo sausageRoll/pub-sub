@@ -1,9 +1,6 @@
 package com.pubsub.broker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pubsub.client.BrokerMessageProducer;
-import com.pubsub.client.MessageConsumer;
-import com.pubsub.client.User;
 import com.pubsub.model.Message;
 import java.util.Arrays;
 import java.util.List;
@@ -12,15 +9,18 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.omg.CORBA.TIMEOUT;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class InMemoryMessageBrokerTest {
 
     List<String> topics = Arrays.asList("topic1", "topic2", "topic3");
+
     final MessageBroker messageBroker = new InMemoryMessageBroker();
+
     final ObjectMapper objectMapper = new ObjectMapper();
+
     final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
     @BeforeEach
@@ -29,49 +29,53 @@ class InMemoryMessageBrokerTest {
     }
 
     @Test
-    public void doubleReadCheck() {
-        final BrokerMessageProducer producer = new BrokerMessageProducer(
-                messageBroker, objectMapper
-        );
-        final MessageConsumer consumer = new MessageConsumer(messageBroker, "topic1");
+    public void testReadWriteSingle() {
+        new Thread(() -> {
+            for (int i = 0; i < 1000; i++) {
+                messageBroker.publishMessage("topic1", new Message<>("message"));
+            }
+        }).start();
 
-        assertNull(consumer.consume(0, TimeUnit.MILLISECONDS));
-
-        User user = new User();
-        user.setName("name1");
-        producer.send("topic1", user);
-        User user2 = new User();
-        user2.setName("name2");
-        producer.send("topic1", user2);
-
-        assertEquals("{\"name\":\"name1\",\"age\":0}",
-                consumer.consume(0, TimeUnit.MILLISECONDS).getValue());
-        consumer.stop();
-        consumer.restart();
-        assertEquals("{\"name\":\"name1\",\"age\":0}",
-                consumer.consume(0, TimeUnit.MILLISECONDS).getValue());
-        assertEquals("{\"name\":\"name2\",\"age\":0}",
-                consumer.consume(0, TimeUnit.MILLISECONDS).getValue());
+        new Thread(() -> {
+            for (int i = 0; i < 1000; i++) {
+                String key = messageBroker.subscribe("topic1");
+                Message<String> message = messageBroker.poll("topic1", key, 10, TimeUnit.MILLISECONDS);
+                System.out.println(message.getValue());
+            }
+        }).start();
     }
 
     @Test
-    public void testPollTimeout() {
-        final BrokerMessageProducer producer = new BrokerMessageProducer(
-                messageBroker, objectMapper
-        );
-        final MessageConsumer consumer = new MessageConsumer(messageBroker, "topic1");
-        User user = new User();
-        user.setName("name1");
+    public void testReadWriteBatch() {
+        new Thread(() -> {
+            for (int i = 0; i < 1000; i++) {
+                messageBroker.publishMessage("topic1", new Message<>("message"));
+            }
+        }).start();
 
-        producer.send("topic1", user);
-        consumer.consume(0, TimeUnit.MILLISECONDS);
-        consumer.consume(0, TimeUnit.MILLISECONDS);
-
-        scheduler.schedule(() -> producer.send("topic1", user), 10, TimeUnit.MILLISECONDS);
-        assertNull(consumer.consume(0, TimeUnit.MILLISECONDS));
-        assertNull(consumer.consume(0, TimeUnit.MILLISECONDS));
-        assertNull(consumer.consume(0, TimeUnit.MILLISECONDS));
-        assertNotNull(consumer.consume(100, TimeUnit.MILLISECONDS));
+        new Thread(() -> {
+            for (int i = 0; i < 10; i++) {
+                String key = messageBroker.subscribe("topic1");
+                Iterable<Message<String>> messages = messageBroker.poll("topic1", key, 10, TimeUnit.MILLISECONDS, 100);
+                messages.forEach((message) -> System.out.println(message.getValue()));
+            }
+        }).start();
     }
 
+    @Test
+    public void testPublishNonExistTopic() {
+        messageBroker.publishMessage("not-existing", new Message<>("message"));
+
+        String key = messageBroker.subscribe("not-existing");
+        assertEquals(messageBroker.poll("not-existing", key).getValue(), "message");
+    }
+
+    @Test
+    public void testTimeOut() {
+        messageBroker.publishMessage("topic1", new Message<>("message"));
+
+        String key = messageBroker.subscribe("topic1");
+        assertEquals(messageBroker.poll("topic1", key).getValue(), "message");
+        assertNull(messageBroker.poll("topic1", key, 1, TimeUnit.SECONDS));
+    }
 }

@@ -53,9 +53,7 @@ public class ExampleRunner {
                     scheduler.schedule(() -> consumer.consume(10, TimeUnit.MILLISECONDS), 2 * j, TimeUnit.MILLISECONDS);
                 }
 
-                scheduler.schedule(consumer::stop, 10 * 20, TimeUnit.MILLISECONDS);
             }
-
             Thread.sleep(4_000);
         }
 

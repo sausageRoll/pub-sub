@@ -33,10 +33,6 @@ public class MessageConsumer {
         return poll;
     }
 
-    public void stop() {
-        memoryMessageBroker.unsubscribe(topic, subscriberKey);
-    }
-
     public void restart() {
         this.subscriberKey = memoryMessageBroker.subscribe(topic);
     }

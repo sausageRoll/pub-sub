@@ -1,7 +1,9 @@
 package com.pubsub.broker;
 
 import com.pubsub.model.Message;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -26,9 +28,15 @@ public class InMemoryMessageBroker implements MessageBroker {
     @Override
     public void publishMessage(String topic, Message<String> message) {
         System.out.println(String.format("message %s came to topic %s", message.getValue(), topic));
-        topics.computeIfPresent(topic, (t, q) -> {
-            q.add(message);
-            return q;
+        topics.compute(topic, (t, q) -> {
+            if (q != null) {
+                q.add(message);
+                return q;
+            } else {
+                BlockingQueue<Message<String>> res = new LinkedBlockingQueue<>();
+                res.add(message);
+                return res;
+            }
         });
     }
 
@@ -43,6 +51,19 @@ public class InMemoryMessageBroker implements MessageBroker {
 
         try {
             return messages.poll(timeout, unit);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Iterable<Message<String>> poll(String topic, String subscriberKey, int timeout, TimeUnit unit, int n) {
+        BlockingQueue<Message<String>> messages = topics.get(topic);
+
+        List<Message<String>> batch = new ArrayList<>();
+        try {
+            BlockingQueueBatcher.take(messages, batch, n, timeout, unit);
+            return batch;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
