@@ -9,8 +9,6 @@ public interface MessageBroker {
 
     String subscribe(String topic);
 
-    boolean unsubscribe(String topic, String subscriberKey);
-
     void publishMessage(String topic, Message<String> message);
 
     Message<String> poll(String topic, String subscriberKey);
