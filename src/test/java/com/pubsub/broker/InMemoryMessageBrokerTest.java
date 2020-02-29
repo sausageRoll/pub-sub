@@ -64,11 +64,11 @@ class InMemoryMessageBrokerTest {
         producer.start();
 
         Thread consumerThread = new Thread(() -> {
-            final BatchMessageConsumer<String> consumer = new BatchMessageConsumer<>(
+            final BatchMessageConsumer consumer = new BatchMessageConsumer(
                     messageBroker, "topic1", 10, TimeUnit.MILLISECONDS, 10);
 
-            for (Iterable<String> messages : consumer) {
-                for (String message : messages) {
+            for (Iterable messages : consumer) {
+                for (Object message : messages) {
                     if (message != null) {
                         System.out.println(String.format(
                                 "consumed message %s from topic %s",

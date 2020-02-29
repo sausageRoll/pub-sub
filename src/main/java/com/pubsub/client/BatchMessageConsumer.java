@@ -5,10 +5,10 @@ import com.pubsub.model.Message;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
-public class BatchMessageConsumer<T> implements Iterator<Iterable<T>>,
-        Iterable<Iterable<T>> {
+public class BatchMessageConsumer implements Iterator<Iterable>,
+        Iterable<Iterable> {
 
-    private final MessageBroker<T> memoryMessageBroker;
+    private final MessageBroker memoryMessageBroker;
 
     private final String topic;
 
@@ -21,7 +21,7 @@ public class BatchMessageConsumer<T> implements Iterator<Iterable<T>>,
     private final int n;
 
     public BatchMessageConsumer(
-            MessageBroker<T> memoryMessageBroker, String topic,
+            MessageBroker memoryMessageBroker, String topic,
             int timeout, TimeUnit unit, int n) {
         this.memoryMessageBroker = memoryMessageBroker;
         this.timeout = timeout;
@@ -37,12 +37,12 @@ public class BatchMessageConsumer<T> implements Iterator<Iterable<T>>,
     }
 
     @Override
-    public Iterable<T> next() {
+    public Iterable next() {
         return memoryMessageBroker.poll(topic, subscriberKey, timeout, unit, n);
     }
 
     @Override
-    public Iterator<Iterable<T>> iterator() {
+    public Iterator<Iterable> iterator() {
         return this;
     }
 }

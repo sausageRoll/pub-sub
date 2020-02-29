@@ -3,18 +3,15 @@ package com.pubsub.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pubsub.broker.MessageBroker;
 
-public class BrokerMessageProducer<T> {
+public class BrokerMessageProducer {
 
-    private final MessageBroker<T> messageBroker;
+    private final MessageBroker messageBroker;
 
-    private final ObjectMapper objectMapper;
-
-    public BrokerMessageProducer(MessageBroker<T> messageBroker, ObjectMapper objectMapper) {
+    public BrokerMessageProducer(MessageBroker messageBroker, ObjectMapper objectMapper) {
         this.messageBroker = messageBroker;
-        this.objectMapper = objectMapper;
     }
 
-    public void send(String topic, T message) {
+    public void send(String topic, Object message) {
         messageBroker.publishMessage(topic, message);
     }
 }

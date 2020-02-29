@@ -31,7 +31,7 @@ public class ExampleRunner {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
         for (int i = 0; i < PRODUCER_NUMBER; i++) {
-            final BrokerMessageProducer<User> producer = new BrokerMessageProducer<>(
+            final BrokerMessageProducer producer = new BrokerMessageProducer(
                     messageBroker, objectMapper
             );
             int index = random.nextInt(topics.size());
