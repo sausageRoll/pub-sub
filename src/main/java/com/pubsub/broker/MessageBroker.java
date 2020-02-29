@@ -11,7 +11,7 @@ public interface MessageBroker {
 
     boolean unsubscribe(String topic, String key);
 
-    <T> void publishMessage(String topic, T message);
+    void publishMessage(String topic, Object message);
 
     <T> T poll(String topic, String subscriberKey);
 

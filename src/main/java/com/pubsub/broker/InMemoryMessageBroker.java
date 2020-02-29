@@ -35,7 +35,7 @@ public class InMemoryMessageBroker implements MessageBroker {
     }
 
     @Override
-    public <T> void publishMessage(String topic, T message) {
+    public void publishMessage(String topic, Object message) {
         System.out.println(String.format("message %s came to topic %s", message.toString(), topic));
         topics.compute(topic, (t, q) -> {
             if (q != null) {
