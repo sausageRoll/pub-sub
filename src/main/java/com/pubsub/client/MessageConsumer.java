@@ -27,7 +27,6 @@ public class MessageConsumer {
                     "consumed message %s from topic %s with key %s",
                     poll.getValue(), topic, subscriberKey
             ));
-            memoryMessageBroker.commitOffset(topic, subscriberKey);
         } else {
             System.out.println(String.format("topic %s is empty", topic));
         }
