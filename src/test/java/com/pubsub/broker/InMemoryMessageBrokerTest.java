@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class InMemoryMessageBrokerTest {
 
@@ -77,5 +78,13 @@ class InMemoryMessageBrokerTest {
         String key = messageBroker.subscribe("topic1");
         assertEquals(messageBroker.poll("topic1", key).getValue(), "message");
         assertNull(messageBroker.poll("topic1", key, 1, TimeUnit.SECONDS));
+    }
+
+    @Test
+    public void testCreateSubscriberOnHandeledTopic() {
+        messageBroker.publishMessage("topic1", new Message<>("message"));
+
+        String key = messageBroker.subscribe("topic1");
+        assertThrows(IllegalStateException.class, () -> messageBroker.subscribe("topic1"));
     }
 }

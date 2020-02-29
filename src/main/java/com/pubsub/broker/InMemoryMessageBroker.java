@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class InMemoryMessageBroker implements MessageBroker {
 
+    private final Map<String, String> topicToConsumer = new ConcurrentHashMap<>();
     private final Map<String, BlockingQueue<Message<String>>> topics = new ConcurrentHashMap<>();
 
     @Override
@@ -22,7 +23,15 @@ public class InMemoryMessageBroker implements MessageBroker {
 
     @Override
     public String subscribe(String topic) {
-        return UUID.randomUUID().toString();
+        if (topicToConsumer.get(topic) != null) {
+            throw new IllegalStateException("topic is already subscribed");
+        }
+        return topicToConsumer.computeIfAbsent(topic, (t) -> UUID.randomUUID().toString());
+    }
+
+    @Override
+    public boolean unsubscribe(String topic, String key) {
+        return topicToConsumer.remove(topic, key);
     }
 
     @Override

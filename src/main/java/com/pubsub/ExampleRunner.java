@@ -43,18 +43,11 @@ public class ExampleRunner {
             }, 10, 100, TimeUnit.MILLISECONDS);
         }
 
-        while (true) {
-            System.out.println("size : " + messageBroker.size());
-            for (int i = 0; i < CONSUMER_NUMBER; i++) {
-                int index = random.nextInt(topics.size());
-                final String topic = topics.get(index);
-                final MessageConsumer consumer = new MessageConsumer(messageBroker, topic);
-                for (int j = 0; j < 15; j++) {
-                    scheduler.schedule(() -> consumer.consume(10, TimeUnit.MILLISECONDS), 2 * j, TimeUnit.MILLISECONDS);
-                }
-
-            }
-            Thread.sleep(4_000);
+        for (String topic : topics) {
+            final MessageConsumer consumer = new MessageConsumer(messageBroker, topic);
+            scheduler.scheduleAtFixedRate(
+                    () -> consumer.consume(1, TimeUnit.MILLISECONDS),
+                    100, 2, TimeUnit.MILLISECONDS);
         }
 
     }
