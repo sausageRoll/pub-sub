@@ -1,6 +1,8 @@
 package com.pubsub.broker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pubsub.client.BatchMessageConsumer;
+import com.pubsub.client.MessageConsumer;
 import com.pubsub.model.Message;
 import java.util.Arrays;
 import java.util.List;
@@ -30,37 +32,66 @@ class InMemoryMessageBrokerTest {
     }
 
     @Test
-    public void testReadWriteSingle() {
-        new Thread(() -> {
+    public void testReadWriteSingle() throws InterruptedException {
+        Thread producer = new Thread(() -> {
             for (int i = 0; i < 1000; i++) {
                 messageBroker.publishMessage("topic1", new Message<>("message"));
             }
-        }).start();
+        });
+        producer.start();
 
-        new Thread(() -> {
-            for (int i = 0; i < 1000; i++) {
-                String key = messageBroker.subscribe("topic1");
-                Message<String> message = messageBroker.poll("topic1", key, 10, TimeUnit.MILLISECONDS);
-                System.out.println(message.getValue());
+        Thread consumerThread = new Thread(() -> {
+            final MessageConsumer consumer = new MessageConsumer(messageBroker, "topic1", 10, TimeUnit.MILLISECONDS);
+
+            for (Message<String> message : consumer) {
+                if (message != null) {
+                    System.out.println(String.format(
+                            "consumed message %s from topic %s",
+                            message.getValue(), "topic1"));
+                } else {
+                    System.out.println(String.format("topic %s is empty", "topic1"));
+                }
             }
-        }).start();
+        });
+        consumerThread.start();
+
+        Thread.sleep(10_000);
+
+        consumerThread.interrupt();
+        producer.interrupt();
     }
 
     @Test
-    public void testReadWriteBatch() {
-        new Thread(() -> {
+    public void testReadWriteBatch() throws InterruptedException {
+        Thread producer = new Thread(() -> {
             for (int i = 0; i < 1000; i++) {
                 messageBroker.publishMessage("topic1", new Message<>("message"));
             }
-        }).start();
+        });
+        producer.start();
 
-        new Thread(() -> {
-            for (int i = 0; i < 10; i++) {
-                String key = messageBroker.subscribe("topic1");
-                Iterable<Message<String>> messages = messageBroker.poll("topic1", key, 10, TimeUnit.MILLISECONDS, 100);
-                messages.forEach((message) -> System.out.println(message.getValue()));
+        Thread consumerThread = new Thread(() -> {
+            final BatchMessageConsumer consumer = new BatchMessageConsumer(
+                    messageBroker, "topic1", 10, TimeUnit.MILLISECONDS, 10);
+
+            for (Iterable<Message<String>> messages : consumer) {
+                for (Message<String> message : messages) {
+                    if (message != null) {
+                        System.out.println(String.format(
+                                "consumed message %s from topic %s",
+                                message.getValue(), "topic1"));
+                    } else {
+                        System.out.println(String.format("topic %s is empty", "topic1"));
+                    }
+                }
             }
-        }).start();
+        });
+        consumerThread.start();
+
+        Thread.sleep(10_000);
+
+        consumerThread.interrupt();
+        producer.interrupt();
     }
 
     @Test
