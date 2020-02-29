@@ -12,19 +12,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.omg.CORBA.TIMEOUT;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryMessageBrokerTest {
 
     List<String> topics = Arrays.asList("topic1", "topic2", "topic3");
-
     final MessageBroker messageBroker = new InMemoryMessageBroker();
-
     final ObjectMapper objectMapper = new ObjectMapper();
-
     final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
     @BeforeEach
@@ -60,20 +56,22 @@ class InMemoryMessageBrokerTest {
 
     @Test
     public void testPollTimeout() {
-        assertTrue(messageBroker.createTopic("topicTest"));
-        messageBroker.publishMessage("topicTest", new Message<>("message"));
-        messageBroker.publishMessage("topicTest", new Message<>("message1"));
-        String key = messageBroker.subscribe("topicTest");
-        assertEquals(messageBroker.poll("topicTest", key).getValue(), "message");
-        assertEquals(messageBroker.poll("topicTest", key).getValue(), "message");
-        assertEquals(messageBroker.poll("topicTest", key).getValue(), "message");
+        final BrokerMessageProducer producer = new BrokerMessageProducer(
+                messageBroker, objectMapper
+        );
+        final MessageConsumer consumer = new MessageConsumer(messageBroker, "topic1");
+        User user = new User();
+        user.setName("name1");
 
-        messageBroker.commitOffset("topicTest", key);
-        assertEquals(messageBroker.poll("topicTest", key).getValue(), "message1");
-        assertEquals(messageBroker.poll("topicTest", key).getValue(), "message1");
+        producer.send("topic1", user);
+        consumer.consume(0, TimeUnit.MILLISECONDS);
+        consumer.consume(0, TimeUnit.MILLISECONDS);
 
-        messageBroker.commitOffset("topicTest", key);
-        assertNull(messageBroker.poll("topicTest", key));
+        scheduler.schedule(() -> producer.send("topic1", user), 10, TimeUnit.MILLISECONDS);
+        assertNull(consumer.consume(0, TimeUnit.MILLISECONDS));
+        assertNull(consumer.consume(0, TimeUnit.MILLISECONDS));
+        assertNull(consumer.consume(0, TimeUnit.MILLISECONDS));
+        assertNotNull(consumer.consume(100, TimeUnit.MILLISECONDS));
     }
 
 }
