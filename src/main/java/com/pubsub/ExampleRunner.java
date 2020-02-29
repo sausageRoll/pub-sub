@@ -24,7 +24,7 @@ public class ExampleRunner {
     public static void main(String[] args) throws InterruptedException {
         List<String> topics = Arrays.asList("topic1", "topic2", "topic3");
 
-        final MessageBroker<User> messageBroker = new InMemoryMessageBroker<>();
+        final MessageBroker messageBroker = new InMemoryMessageBroker();
         topics.forEach(messageBroker::createTopic);
 
         final ObjectMapper objectMapper = new ObjectMapper();
@@ -44,14 +44,14 @@ public class ExampleRunner {
 
         for (String topic : topics) {
             new Thread(() -> {
-                final MessageConsumer<User> consumer = new MessageConsumer<>(messageBroker, topic, 10,
+                final MessageConsumer consumer = new MessageConsumer(messageBroker, topic, 10,
                         TimeUnit.MILLISECONDS);
 
-                for (User message : consumer) {
+                for (Object message : consumer) {
                     if (message != null) {
                         System.out.println(String.format(
                                 "consumed message %s from topic %s",
-                                message.getName(), topic));
+                                message, topic));
                     } else {
                         System.out.println(String.format("topic %s is empty", topic));
                     }

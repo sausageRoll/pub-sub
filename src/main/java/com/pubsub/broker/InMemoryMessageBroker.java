@@ -11,10 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-public class InMemoryMessageBroker<T> implements MessageBroker<T> {
+public class InMemoryMessageBroker implements MessageBroker {
 
     private final Map<String, String> topicToConsumer = new ConcurrentHashMap<>();
-    private final Map<String, BlockingQueue<T>> topics = new ConcurrentHashMap<>();
+    private final Map<String, BlockingQueue<Object>> topics = new ConcurrentHashMap<>();
 
     @Override
     public boolean createTopic(String topicName) {
@@ -35,14 +35,14 @@ public class InMemoryMessageBroker<T> implements MessageBroker<T> {
     }
 
     @Override
-    public void publishMessage(String topic, T message) {
+    public <T> void publishMessage(String topic, T message) {
         System.out.println(String.format("message %s came to topic %s", message.toString(), topic));
         topics.compute(topic, (t, q) -> {
             if (q != null) {
                 q.add(message);
                 return q;
             } else {
-                BlockingQueue<T> res = new LinkedBlockingQueue<>();
+                BlockingQueue<Object> res = new LinkedBlockingQueue<>();
                 res.add(message);
                 return res;
             }
@@ -50,26 +50,26 @@ public class InMemoryMessageBroker<T> implements MessageBroker<T> {
     }
 
     @Override
-    public T poll(String topic, String subscriberKey) {
+    public <T> T poll(String topic, String subscriberKey) {
         return poll(topic, subscriberKey, 0, TimeUnit.MILLISECONDS);
     }
 
     @Override
-    public T poll(String topic, String subscriberKey, int timeout, TimeUnit unit) {
-        BlockingQueue<T> messages = topics.get(topic);
+    public <T> T poll(String topic, String subscriberKey, int timeout, TimeUnit unit) {
+        BlockingQueue<Object> messages = topics.get(topic);
 
         try {
-            return messages.poll(timeout, unit);
+            return (T) messages.poll(timeout, unit);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Iterable<T> poll(String topic, String subscriberKey, int timeout, TimeUnit unit, int n) {
-        BlockingQueue<T> messages = topics.get(topic);
+    public Iterable poll(String topic, String subscriberKey, int timeout, TimeUnit unit, int n) {
+        BlockingQueue<Object> messages = topics.get(topic);
 
-        List<T> batch = new ArrayList<>();
+        List<Object> batch = new ArrayList<>();
         try {
             BlockingQueueBatcher.take(messages, batch, n, timeout, unit);
             return batch;

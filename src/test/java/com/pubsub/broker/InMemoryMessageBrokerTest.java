@@ -1,13 +1,9 @@
 package com.pubsub.broker;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pubsub.client.BatchMessageConsumer;
 import com.pubsub.client.MessageConsumer;
-import com.pubsub.model.Message;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +16,7 @@ class InMemoryMessageBrokerTest {
 
     List<String> topics = Arrays.asList("topic1", "topic2", "topic3");
 
-    final MessageBroker<String> messageBroker = new InMemoryMessageBroker<>();
+    final MessageBroker messageBroker = new InMemoryMessageBroker();
 
     @BeforeEach
     public void setUp() {
@@ -37,10 +33,10 @@ class InMemoryMessageBrokerTest {
         producer.start();
 
         Thread consumerThread = new Thread(() -> {
-            final MessageConsumer<String> consumer = new MessageConsumer<>(
+            final MessageConsumer consumer = new MessageConsumer(
                     messageBroker, "topic1", 10, TimeUnit.MILLISECONDS);
 
-            for (String message : consumer) {
+            for (Object message : consumer) {
                 if (message != null) {
                     System.out.println(String.format(
                             "consumed message %s from topic %s",
