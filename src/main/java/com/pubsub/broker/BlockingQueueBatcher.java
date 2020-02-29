@@ -4,8 +4,7 @@ import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-/** Batches elements from a BlockingQueue. */
-class BlockingQueueBatcher {
+public class BlockingQueueBatcher {
     static RelativeTimeProvider timeProvider = new SystemRelativeTimeProvider();
 
     // Prevent instantiation.

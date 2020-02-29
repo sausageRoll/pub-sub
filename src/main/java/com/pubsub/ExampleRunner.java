@@ -6,6 +6,7 @@ import com.pubsub.broker.MessageBroker;
 import com.pubsub.client.BrokerMessageProducer;
 import com.pubsub.client.MessageConsumer;
 import com.pubsub.client.User;
+import com.pubsub.model.Message;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -22,7 +23,6 @@ public class ExampleRunner {
     private static final Random random = new Random();
 
     public static void main(String[] args) throws InterruptedException {
-//        List<String> topics = Arrays.asList("topic1");
         List<String> topics = Arrays.asList("topic1", "topic2", "topic3");
 
         final MessageBroker messageBroker = new InMemoryMessageBroker();
@@ -44,10 +44,19 @@ public class ExampleRunner {
         }
 
         for (String topic : topics) {
-            final MessageConsumer consumer = new MessageConsumer(messageBroker, topic);
-            scheduler.scheduleAtFixedRate(
-                    () -> consumer.consume(1, TimeUnit.MILLISECONDS),
-                    100, 2, TimeUnit.MILLISECONDS);
+            new Thread(() -> {
+                final MessageConsumer consumer = new MessageConsumer(messageBroker, topic, 10, TimeUnit.MILLISECONDS);
+
+                for (Message<String> message : consumer) {
+                    if (message != null) {
+                        System.out.println(String.format(
+                                "consumed message %s from topic %s",
+                                message.getValue(), topic));
+                    } else {
+                        System.out.println(String.format("topic %s is empty", topic));
+                    }
+                }
+            }).start();
         }
 
     }
