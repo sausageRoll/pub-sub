@@ -5,16 +5,16 @@ import com.pubsub.model.Message;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
-public class MessageConsumer implements Iterator<Message<String>>, Iterable<Message<String>> {
+public class MessageConsumer<T> implements Iterator<T>, Iterable<T> {
 
-    private final MessageBroker memoryMessageBroker;
+    private final MessageBroker<T> memoryMessageBroker;
     private final String topic;
     private final String subscriberKey;
     private final int timeout;
     private final TimeUnit unit;
 
     public MessageConsumer(
-            MessageBroker memoryMessageBroker, String topic,
+            MessageBroker<T> memoryMessageBroker, String topic,
             int timeout, TimeUnit unit) {
         this.memoryMessageBroker = memoryMessageBroker;
         this.timeout = timeout;
@@ -29,12 +29,12 @@ public class MessageConsumer implements Iterator<Message<String>>, Iterable<Mess
     }
 
     @Override
-    public Message<String> next() {
+    public T next() {
         return memoryMessageBroker.poll(topic, subscriberKey, timeout, unit);
     }
 
     @Override
-    public Iterator<Message<String>> iterator() {
+    public Iterator<T> iterator() {
         return this;
     }
 }

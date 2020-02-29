@@ -20,11 +20,7 @@ class InMemoryMessageBrokerTest {
 
     List<String> topics = Arrays.asList("topic1", "topic2", "topic3");
 
-    final MessageBroker messageBroker = new InMemoryMessageBroker();
-
-    final ObjectMapper objectMapper = new ObjectMapper();
-
-    final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+    final MessageBroker<String> messageBroker = new InMemoryMessageBroker<>();
 
     @BeforeEach
     public void setUp() {
@@ -35,19 +31,20 @@ class InMemoryMessageBrokerTest {
     public void testReadWriteSingle() throws InterruptedException {
         Thread producer = new Thread(() -> {
             for (int i = 0; i < 1000; i++) {
-                messageBroker.publishMessage("topic1", new Message<>("message"));
+                messageBroker.publishMessage("topic1", "message");
             }
         });
         producer.start();
 
         Thread consumerThread = new Thread(() -> {
-            final MessageConsumer consumer = new MessageConsumer(messageBroker, "topic1", 10, TimeUnit.MILLISECONDS);
+            final MessageConsumer<String> consumer = new MessageConsumer<>(
+                    messageBroker, "topic1", 10, TimeUnit.MILLISECONDS);
 
-            for (Message<String> message : consumer) {
+            for (String message : consumer) {
                 if (message != null) {
                     System.out.println(String.format(
                             "consumed message %s from topic %s",
-                            message.getValue(), "topic1"));
+                            message, "topic1"));
                 } else {
                     System.out.println(String.format("topic %s is empty", "topic1"));
                 }
@@ -65,21 +62,21 @@ class InMemoryMessageBrokerTest {
     public void testReadWriteBatch() throws InterruptedException {
         Thread producer = new Thread(() -> {
             for (int i = 0; i < 1000; i++) {
-                messageBroker.publishMessage("topic1", new Message<>("message"));
+                messageBroker.publishMessage("topic1", "message");
             }
         });
         producer.start();
 
         Thread consumerThread = new Thread(() -> {
-            final BatchMessageConsumer consumer = new BatchMessageConsumer(
+            final BatchMessageConsumer<String> consumer = new BatchMessageConsumer<>(
                     messageBroker, "topic1", 10, TimeUnit.MILLISECONDS, 10);
 
-            for (Iterable<Message<String>> messages : consumer) {
-                for (Message<String> message : messages) {
+            for (Iterable<String> messages : consumer) {
+                for (String message : messages) {
                     if (message != null) {
                         System.out.println(String.format(
                                 "consumed message %s from topic %s",
-                                message.getValue(), "topic1"));
+                                message, "topic1"));
                     } else {
                         System.out.println(String.format("topic %s is empty", "topic1"));
                     }
@@ -96,24 +93,24 @@ class InMemoryMessageBrokerTest {
 
     @Test
     public void testPublishNonExistTopic() {
-        messageBroker.publishMessage("not-existing", new Message<>("message"));
+        messageBroker.publishMessage("not-existing", "message");
 
         String key = messageBroker.subscribe("not-existing");
-        assertEquals(messageBroker.poll("not-existing", key).getValue(), "message");
+        assertEquals(messageBroker.poll("not-existing", key), "message");
     }
 
     @Test
     public void testTimeOut() {
-        messageBroker.publishMessage("topic1", new Message<>("message"));
+        messageBroker.publishMessage("topic1", "message");
 
         String key = messageBroker.subscribe("topic1");
-        assertEquals(messageBroker.poll("topic1", key).getValue(), "message");
+        assertEquals(messageBroker.poll("topic1", key), "message");
         assertNull(messageBroker.poll("topic1", key, 1, TimeUnit.SECONDS));
     }
 
     @Test
     public void testCreateSubscriberOnHandeledTopic() {
-        messageBroker.publishMessage("topic1", new Message<>("message"));
+        messageBroker.publishMessage("topic1", "message");
 
         String key = messageBroker.subscribe("topic1");
         assertThrows(IllegalStateException.class, () -> messageBroker.subscribe("topic1"));

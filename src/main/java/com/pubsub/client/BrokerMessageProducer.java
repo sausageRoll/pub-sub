@@ -1,27 +1,20 @@
 package com.pubsub.client;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pubsub.broker.MessageBroker;
-import com.pubsub.model.Message;
 
-public class BrokerMessageProducer {
+public class BrokerMessageProducer<T> {
 
-    private final MessageBroker messageBroker;
+    private final MessageBroker<T> messageBroker;
 
     private final ObjectMapper objectMapper;
 
-    public BrokerMessageProducer(MessageBroker messageBroker, ObjectMapper objectMapper) {
+    public BrokerMessageProducer(MessageBroker<T> messageBroker, ObjectMapper objectMapper) {
         this.messageBroker = messageBroker;
         this.objectMapper = objectMapper;
     }
 
-    public void send(String topic, User user) {
-        try {
-            String message = objectMapper.writeValueAsString(user);
-            messageBroker.publishMessage(topic, new Message<>(message));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+    public void send(String topic, T message) {
+        messageBroker.publishMessage(topic, message);
     }
 }

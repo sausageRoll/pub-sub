@@ -6,7 +6,6 @@ import com.pubsub.broker.MessageBroker;
 import com.pubsub.client.BrokerMessageProducer;
 import com.pubsub.client.MessageConsumer;
 import com.pubsub.client.User;
-import com.pubsub.model.Message;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -25,14 +24,14 @@ public class ExampleRunner {
     public static void main(String[] args) throws InterruptedException {
         List<String> topics = Arrays.asList("topic1", "topic2", "topic3");
 
-        final MessageBroker messageBroker = new InMemoryMessageBroker();
+        final MessageBroker<User> messageBroker = new InMemoryMessageBroker<>();
         topics.forEach(messageBroker::createTopic);
 
         final ObjectMapper objectMapper = new ObjectMapper();
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
         for (int i = 0; i < PRODUCER_NUMBER; i++) {
-            final BrokerMessageProducer producer = new BrokerMessageProducer(
+            final BrokerMessageProducer<User> producer = new BrokerMessageProducer<>(
                     messageBroker, objectMapper
             );
             int index = random.nextInt(topics.size());
@@ -45,13 +44,14 @@ public class ExampleRunner {
 
         for (String topic : topics) {
             new Thread(() -> {
-                final MessageConsumer consumer = new MessageConsumer(messageBroker, topic, 10, TimeUnit.MILLISECONDS);
+                final MessageConsumer<User> consumer = new MessageConsumer<>(messageBroker, topic, 10,
+                        TimeUnit.MILLISECONDS);
 
-                for (Message<String> message : consumer) {
+                for (User message : consumer) {
                     if (message != null) {
                         System.out.println(String.format(
                                 "consumed message %s from topic %s",
-                                message.getValue(), topic));
+                                message.getName(), topic));
                     } else {
                         System.out.println(String.format("topic %s is empty", topic));
                     }

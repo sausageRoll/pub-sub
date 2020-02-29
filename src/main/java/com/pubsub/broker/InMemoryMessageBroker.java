@@ -11,10 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-public class InMemoryMessageBroker implements MessageBroker {
+public class InMemoryMessageBroker<T> implements MessageBroker<T> {
 
     private final Map<String, String> topicToConsumer = new ConcurrentHashMap<>();
-    private final Map<String, BlockingQueue<Message<String>>> topics = new ConcurrentHashMap<>();
+    private final Map<String, BlockingQueue<T>> topics = new ConcurrentHashMap<>();
 
     @Override
     public boolean createTopic(String topicName) {
@@ -35,14 +35,14 @@ public class InMemoryMessageBroker implements MessageBroker {
     }
 
     @Override
-    public void publishMessage(String topic, Message<String> message) {
-        System.out.println(String.format("message %s came to topic %s", message.getValue(), topic));
+    public void publishMessage(String topic, T message) {
+        System.out.println(String.format("message %s came to topic %s", message.toString(), topic));
         topics.compute(topic, (t, q) -> {
             if (q != null) {
                 q.add(message);
                 return q;
             } else {
-                BlockingQueue<Message<String>> res = new LinkedBlockingQueue<>();
+                BlockingQueue<T> res = new LinkedBlockingQueue<>();
                 res.add(message);
                 return res;
             }
@@ -50,13 +50,13 @@ public class InMemoryMessageBroker implements MessageBroker {
     }
 
     @Override
-    public Message<String> poll(String topic, String subscriberKey) {
+    public T poll(String topic, String subscriberKey) {
         return poll(topic, subscriberKey, 0, TimeUnit.MILLISECONDS);
     }
 
     @Override
-    public Message<String> poll(String topic, String subscriberKey, int timeout, TimeUnit unit) {
-        BlockingQueue<Message<String>> messages = topics.get(topic);
+    public T poll(String topic, String subscriberKey, int timeout, TimeUnit unit) {
+        BlockingQueue<T> messages = topics.get(topic);
 
         try {
             return messages.poll(timeout, unit);
@@ -66,10 +66,10 @@ public class InMemoryMessageBroker implements MessageBroker {
     }
 
     @Override
-    public Iterable<Message<String>> poll(String topic, String subscriberKey, int timeout, TimeUnit unit, int n) {
-        BlockingQueue<Message<String>> messages = topics.get(topic);
+    public Iterable<T> poll(String topic, String subscriberKey, int timeout, TimeUnit unit, int n) {
+        BlockingQueue<T> messages = topics.get(topic);
 
-        List<Message<String>> batch = new ArrayList<>();
+        List<T> batch = new ArrayList<>();
         try {
             BlockingQueueBatcher.take(messages, batch, n, timeout, unit);
             return batch;
