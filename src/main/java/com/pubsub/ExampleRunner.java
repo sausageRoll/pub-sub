@@ -47,7 +47,8 @@ public class ExampleRunner {
                 final MessageConsumer consumer = new MessageConsumer(messageBroker, topic, 10,
                         TimeUnit.MILLISECONDS);
 
-                for (Object message : consumer) {
+                Iterable<User> iterable = consumer.iterable();
+                for (User message : iterable) {
                     if (message != null) {
                         System.out.println(String.format(
                                 "consumed message %s from topic %s",
