@@ -31,7 +31,7 @@ public class MessageConsumer {
 
             @Override
             public boolean hasNext() {
-                return false;
+                return true;
             }
 
             @Override
