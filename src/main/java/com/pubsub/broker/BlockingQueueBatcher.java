@@ -5,10 +5,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class BlockingQueueBatcher {
+
     static RelativeTimeProvider timeProvider = new SystemRelativeTimeProvider();
 
     // Prevent instantiation.
-    private BlockingQueueBatcher() {}
+    private BlockingQueueBatcher() {
+    }
 
     public static <T> int take(BlockingQueue<T> queue,
                                Collection<? super T> batch, int maxBatchSize, long maxLatency,
@@ -23,7 +25,11 @@ public class BlockingQueueBatcher {
             boolean timeout = false;
             if (stopBatchTimeNanos == -1) {
                 // Start of new batch. Block for the first item of this batch.
-                batch.add(queue.take());
+                final T first = queue.poll(maxLatency, TimeUnit.MILLISECONDS);
+                if (first == null) {
+                    break;
+                }
+                batch.add(first);
                 curBatchSize++;
                 stopBatchTimeNanos = timeProvider.relativeTime(TimeUnit.NANOSECONDS)
                         + maxLatencyNanos;

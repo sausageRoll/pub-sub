@@ -1,6 +1,5 @@
 package com.pubsub.broker;
 
-import com.pubsub.model.Message;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -14,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class InMemoryMessageBroker implements MessageBroker {
 
     private final Map<String, String> topicToConsumer = new ConcurrentHashMap<>();
+
     private final Map<String, BlockingQueue<Object>> topics = new ConcurrentHashMap<>();
 
     @Override
@@ -72,7 +72,7 @@ public class InMemoryMessageBroker implements MessageBroker {
         List<Object> batch = new ArrayList<>();
         try {
             BlockingQueueBatcher.take(messages, batch, n, timeout, unit);
-            return batch;
+            return batch.isEmpty() ? null : batch;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
