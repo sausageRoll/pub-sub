@@ -17,7 +17,7 @@ public interface MessageBroker {
 
     <T> T poll(String topic, String subscriberKey, int timeout, TimeUnit unit);
 
-    Iterable poll(String topic, String subscriberKey, int timeout, TimeUnit unit, int n);
+    Iterable poll(String topic, String subscriberKey, int timeout, int n);
 
     int size();
 }

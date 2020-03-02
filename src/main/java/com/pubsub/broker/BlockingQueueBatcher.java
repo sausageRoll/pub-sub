@@ -13,44 +13,22 @@ public class BlockingQueueBatcher {
     }
 
     public static <T> int take(BlockingQueue<T> queue,
-                               Collection<? super T> batch, int maxBatchSize, long maxLatency,
-                               TimeUnit maxLatencyUnit) throws InterruptedException {
-        long maxLatencyNanos = maxLatencyUnit.toNanos(maxLatency);
+                               Collection<? super T> batch,
+                               int maxBatchSize,
+                               long maxLatency) throws InterruptedException {
 
         int curBatchSize = 0;
-        long stopBatchTimeNanos = -1;
 
-        // The loop flow is 1) block, 2) drain queue, 3) possibly consume batch.
         while (true) {
-            boolean timeout = false;
-            if (stopBatchTimeNanos == -1) {
-                // Start of new batch. Block for the first item of this batch.
-                final T first = queue.poll(maxLatency, TimeUnit.MILLISECONDS);
-                if (first == null) {
-                    break;
-                }
-                batch.add(first);
-                curBatchSize++;
-                stopBatchTimeNanos = timeProvider.relativeTime(TimeUnit.NANOSECONDS)
-                        + maxLatencyNanos;
-            } else {
-                // Continue existing batch. Block until an item is in the queue or the
-                // batch timeout expires.
-                T element = queue.poll(
-                        stopBatchTimeNanos
-                                - timeProvider.relativeTime(TimeUnit.NANOSECONDS),
-                        TimeUnit.NANOSECONDS);
-                if (element == null) {
-                    // Timeout occurred.
-                    break;
-                }
-                batch.add(element);
-                curBatchSize++;
+            T element = queue.poll(maxLatency, TimeUnit.MILLISECONDS);
+            if (element == null) {
+                break;
             }
+            batch.add(element);
+            curBatchSize++;
             curBatchSize += queue.drainTo(batch, maxBatchSize - curBatchSize);
 
             if (curBatchSize >= maxBatchSize) {
-                // End current batch.
                 break;
             }
         }
@@ -58,3 +36,4 @@ public class BlockingQueueBatcher {
         return curBatchSize;
     }
 }
+

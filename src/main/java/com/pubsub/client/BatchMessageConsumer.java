@@ -44,7 +44,7 @@ public class BatchMessageConsumer {
 
             @Override
             public Iterable next() {
-                return memoryMessageBroker.poll(topic, subscriberKey, timeout, unit, n);
+                return memoryMessageBroker.poll(topic, subscriberKey, timeout, n);
             }
         };
         iterable = () -> iterator;

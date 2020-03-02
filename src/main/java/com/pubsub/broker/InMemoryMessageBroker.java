@@ -66,12 +66,12 @@ public class InMemoryMessageBroker implements MessageBroker {
     }
 
     @Override
-    public Iterable poll(String topic, String subscriberKey, int timeout, TimeUnit unit, int n) {
+    public Iterable poll(String topic, String subscriberKey, int timeout, int n) {
         BlockingQueue<Object> messages = topics.get(topic);
 
         List<Object> batch = new ArrayList<>();
         try {
-            BlockingQueueBatcher.take(messages, batch, n, timeout, unit);
+            BlockingQueueBatcher.take(messages, batch, n, timeout);
             return batch.isEmpty() ? null : batch;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
