@@ -40,12 +40,6 @@ public class MessageConsumer {
             }
         };
 
-        iterable = new Iterable() {
-
-            @Override
-            public Iterator iterator() {
-                return iterator;
-            }
-        };
+        iterable = () -> iterator;
     }
 }

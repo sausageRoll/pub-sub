@@ -68,8 +68,9 @@ class InMemoryMessageBrokerTest {
             final BatchMessageConsumer consumer = new BatchMessageConsumer(
                     messageBroker, "topic1", 10, TimeUnit.MILLISECONDS, 10);
 
-            for (Iterable messages : consumer) {
-                for (Object message : messages) {
+            Iterable<Iterable<String>> iterable = consumer.iterable();
+            for (Iterable<String> messages : iterable) {
+                for (String message : messages) {
                     if (message != null) {
                         System.out.println(String.format(
                                 "consumed message %s from topic %s",
