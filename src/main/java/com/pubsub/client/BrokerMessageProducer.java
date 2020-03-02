@@ -7,7 +7,7 @@ public class BrokerMessageProducer {
 
     private final MessageBroker messageBroker;
 
-    public BrokerMessageProducer(MessageBroker messageBroker, ObjectMapper objectMapper) {
+    public BrokerMessageProducer(MessageBroker messageBroker) {
         this.messageBroker = messageBroker;
     }
 

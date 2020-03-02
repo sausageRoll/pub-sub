@@ -22,7 +22,7 @@ public class BatchMessageConsumer {
 
     private final Iterable iterable;
 
-    public <T> Iterable<T> iterable() {
+    public <T> Iterable<Iterable<T>> iterable() {
         return iterable;
     }
 
@@ -35,7 +35,7 @@ public class BatchMessageConsumer {
         this.n = n;
         this.subscriberKey = memoryMessageBroker.subscribe(topic);
         this.topic = topic;
-        iterator = new Iterator() {
+        iterator = new Iterator<Iterable>() {
 
             @Override
             public boolean hasNext() {
@@ -43,7 +43,7 @@ public class BatchMessageConsumer {
             }
 
             @Override
-            public Object next() {
+            public Iterable next() {
                 return memoryMessageBroker.poll(topic, subscriberKey, timeout, unit, n);
             }
         };

@@ -32,7 +32,7 @@ public class ExampleRunner {
 
         for (int i = 0; i < PRODUCER_NUMBER; i++) {
             final BrokerMessageProducer producer = new BrokerMessageProducer(
-                    messageBroker, objectMapper
+                    messageBroker
             );
             int index = random.nextInt(topics.size());
             final String topic = topics.get(index);
